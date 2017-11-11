@@ -167,23 +167,9 @@ exports.getUserOrders = function (req, res) {
     console.log('getUserOrders called')
 
     var collection = db.collection('Orders')
-
-    collection.aggregate([{
-      $lookup: {
-        from: 'MealOptions',
-        localField: 'OptionId',
-        foreignField: '_id',
-        as: 'OrderedMeal'
-      }
-    },
-      {
-        $match: {
-          $and: [{
-            CreatedBy: new ObjectId(req.params.userid)
-          }]
-        }
-      }
-    ]).toArray(function (err, items) {
+    collection.find({
+      'CreatedBy': new ObjectId(req.params.userid)
+    }).toArray(function (err, items) {
       customCallback(items, res)
     })
     db.close()
@@ -202,29 +188,18 @@ exports.getAllOrders = function (req, res) {
     var end = new Date()
     end.setHours(23, 59, 59, 999)
 
-    collection.aggregate([{
-      $lookup: {
-        from: 'MealOptions',
-        localField: 'OptionId',
-        foreignField: '_id',
-        as: 'OrderedMeal'
-      }
-    },
-      {
-        $match: {
-          $and: [{
-            IsActive: true
-          },
-            {
-              CreatedOn: {
-                $lt: end,
-                $gt: start
-              }
-            }
-          ]
+    collection.find({
+      $and: [{
+        IsActive: true
+      },
+        {
+          CreatedOn: {
+            $lt: end,
+            $gt: start
+          }
         }
-      }
-    ]).toArray(function (err, items) {
+      ]
+    }).toArray(function (err, items) {
       customCallback(items, res)
     })
     db.close()
@@ -235,17 +210,16 @@ exports.placeOrder = function (req, res) {
   MongoClient.connect(url, function (err, db) {
     console.log('placeOrder called')
 
-    var orderDetail = req.body
-    if (orderDetail.length <= 0) {
+    var _order = req.body
+    if (_order.length <= 0) {
       console.log('No record to insert')
       customCallback('No record to insert', res)
       return
     }
 
-    orderDetail.OptionId = new ObjectId(orderDetail.OptionId)
-    orderDetail.CreatedBy = new ObjectId(orderDetail.CreatedBy)
-    var collection = db.collection('Orders')
-    collection.insert(orderDetail, {
+    _order.CreatedBy = new ObjectId(_order.CreatedBy)
+    var ordersTable = db.collection('Orders')
+    ordersTable.insert(_order, {
       w: 1
     }, function (err, result) {
       assert(err == null)
