@@ -28,7 +28,8 @@ exports.registerUser = function (req, res) {
           customCallback({
             isRegistered: false,
             isAlreadyRegistered: true,
-            userId: null
+            userId: null,
+            userType: null
           }, res)
         } else {
           bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
@@ -49,7 +50,8 @@ exports.registerUser = function (req, res) {
                 customCallback({
                   isRegistered: true,
                   isAlreadyRegistered: false,
-                  userId: result.ops[0]._id
+                  userId: result.ops[0]._id,
+                  userType: items[0].UserType
                 }, res)
                 db.close()
               })
@@ -82,13 +84,15 @@ exports.loginUser = function (req, res) {
             customCallback({
               isUsernameValid: true,
               isPasswordValid: true,
-              userId: items[0]._id
+              userId: items[0]._id,
+              userType: items[0].UserType
             }, res)
           else
             customCallback({
               isUsernameValid: true,
               isPasswordValid: false,
-              userId: null
+              userId: null,
+              userType: null
             }, res)
           db.close()
         })
@@ -96,7 +100,8 @@ exports.loginUser = function (req, res) {
         customCallback({
           isUsernameValid: false,
           isPasswordValid: false,
-          userId: null
+          userId: null,
+          userType: null
         }, res)
       }
     })
