@@ -20,6 +20,7 @@ app.post('/cancelOrder', dbLayer.cancelOrder)
 app.get('/getMealOptions', dbLayer.getMealOptions)
 app.post('/updateMealOption', dbLayer.updateMealOption)
 app.post('/acceptOrder/:id', dbLayer.acceptOrder)
+app.get('/getAllOrders', dbLayer.getAllOrders)
 
 // Start server at port 3000
 var server = app.listen(3000, function () {

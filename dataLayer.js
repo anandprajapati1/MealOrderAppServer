@@ -194,19 +194,21 @@ exports.getAllOrders = function (req, res) {
     end.setHours(23, 59, 59, 999)
 
     collection.find({
-      $and: [{
-        IsActive: true
-      },
-        {
-          CreatedOn: {
-            $lt: end,
-            $gt: start
-          }
-        }
-      ]
-    }).toArray(function (err, items) {
-      customCallback(items, res)
-    })
+    //   IsActive: true
+    //   $and: [{
+    //     IsActive: true
+    //   },
+    //     {
+    //       CreatedOn: {
+    //         $lt: end,
+    //         $gt: start
+    //       }
+    //     }
+    //   ]
+    }, {IsAccepted: 1,IsPaid: 1,IsActive: 1,_id: 0})
+      .toArray(function (err, items) {
+        customCallback(items, res)
+      })
     db.close()
   })
 }
