@@ -222,7 +222,33 @@ exports.getFilteredOrders = function (req, res) {
             filterObj.IsPaid = req.body.IsPaid
 
         var collection = db.collection('Orders')
-        collection.find(filterObj).toArray(function (err, items) {
+        collection.aggregate([
+            { 
+                $match: filterObj
+            },
+            {
+              $lookup:
+                  {
+                    from: 'Users',
+                    localField: 'CreatedBy',
+                    foreignField: '_id',
+                    as: 'User'
+                  }
+           }
+           ,{ 
+                 $project : { 
+                     "_id1" : 1, 
+                     "IsAccepted" : 1,
+                     "articleId" : 1,
+                     "IsPaid" : 1,
+                     "IsActive" : 1,
+                     "CreatedOn" : 1,
+                     "CreatedBy" : 1,
+                     "EmailId" : {"$arrayElemAt": [ "$User.EmailId", 0 ]},
+                     "OrderItems" : 1
+                 } 
+             }
+         ]).toArray(function (err, items) {
                 customCallback(items, res)
             })
         db.close()
