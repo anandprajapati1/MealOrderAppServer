@@ -11,6 +11,7 @@ app.use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
 app.use(new CORS())
 
 // Define routes
+app.get('/isConnected', (req,res)=>{res.send("Service is running...")})
 app.post('/registerUser', dbLayer.registerUser)
 app.post('/loginUser', dbLayer.loginUser)
 app.post('/changePassword', dbLayer.changePassword)
@@ -24,7 +25,7 @@ app.post('/rejectOrder', dbLayer.rejectOrder)
 app.get('/getAllOrders', dbLayer.getAllOrders)
 app.post('/getFilteredOrders', dbLayer.getFilteredOrders)
 
-// Start server at port 3000
-var server = app.listen(3000, function () {
-  console.log('listening to port 3000...')
+// Start server at port 8080
+var server = app.listen(8080, function () {
+  console.log('listening to port 8080...')
 })
