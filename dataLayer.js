@@ -211,18 +211,44 @@ exports.getFilteredOrders = function (req, res) {
     MongoClient.connect(url, function (err, db) {
         // write message to console if condition fails
         assert(err == null)
-        console.log('getFilteredOrders called with filter : '+req.body);
+        console.log('getFilteredOrders called');
 
         var filterObj = {}
-        if (!(req.body.IsActive == null || req.body.IsActive == undefined))
+        if (!(req.body.IsActive === null || req.body.IsActive === undefined))
             filterObj.IsActive = req.body.IsActive
-        if (!(req.body.IsAccepted == null || req.body.IsAccepted == undefined))
+        if (!(req.body.IsAccepted === undefined))
             filterObj.IsAccepted = req.body.IsAccepted
-        if (!(req.body.IsPaid == null || req.body.IsPaid == undefined))
+        if (!(req.body.IsPaid === null || req.body.IsPaid === undefined))
             filterObj.IsPaid = req.body.IsPaid
 
         var collection = db.collection('Orders')
-        collection.find(filterObj).toArray(function (err, items) {
+        collection.aggregate([
+            { 
+                $match: filterObj
+            },
+            {
+              $lookup:
+                  {
+                    from: 'Users',
+                    localField: 'CreatedBy',
+                    foreignField: '_id',
+                    as: 'User'
+                  }
+           }
+           ,{ 
+                 $project : { 
+                     "_id1" : 1, 
+                     "IsAccepted" : 1,
+                     "articleId" : 1,
+                     "IsPaid" : 1,
+                     "IsActive" : 1,
+                     "CreatedOn" : 1,
+                     "CreatedBy" : 1,
+                     "EmailId" : {"$arrayElemAt": [ "$User.EmailId", 0 ]},
+                     "OrderItems" : 1
+                 } 
+             }
+         ]).toArray(function (err, items) {
                 customCallback(items, res)
             })
         db.close()
@@ -316,27 +342,36 @@ exports.getMealOptions = function (req, res) {
 }
 exports.acceptOrder = function (req, res) {
     MongoClient.connect(url, function (err, db) {
-        var d = req.body
-        if (d.length <= 0) {
-            console.log('No record to update')
-            customCallback('No record to update', res)
-            return
-        }
-        console.log('acceptOrder called for ' + d._id)
-
-        var collection = db.collection('Orders')
-        collection.findOneAndUpdate({
-            _id: ObjectId(d._id)
-        }, {
-            $set: {
-                'IsAccepted': true
-            }
-        }, function (err, result) {
-            customCallback('Updated one record', res)
-        })
+        updateOrder_Vendor(res,req.body.id,db,true)
         db.close()
     })
 }
+exports.rejectOrder = function (req, res) {
+    MongoClient.connect(url, function (err, db) {
+        updateOrder_Vendor(res,req.body.id,db,false)
+        db.close()
+    })
+}
+var updateOrder_Vendor = function(res,id,db,_isAccepted) {
+    if (!id) {
+        console.log('No record to update')
+        customCallback('No record to update', res)
+        return
+    }
+    console.log((_isAccepted?"acceptOrder":"rejectOrder")+' called for ' + id)
+
+    var collection = db.collection('Orders')
+    collection.findOneAndUpdate({
+        _id: ObjectId(id)
+    }, {
+        $set: {
+            'IsAccepted': _isAccepted
+        }
+    }, function (err, result) {
+        assert(err == null)
+        customCallback(true, res)
+    })
+ }
 
 var customCallback = function (d, response) {
     // send json data in response
