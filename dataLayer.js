@@ -51,7 +51,7 @@ exports.registerUser = function (req, res) {
                                     isRegistered: true,
                                     isAlreadyRegistered: false,
                                     userId: result.ops[0]._id,
-                                    userType: items[0].UserType
+                                    userType: result.ops[0].UserType
                                 }, res)
                                 db.close()
                             })
